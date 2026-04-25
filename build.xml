@@ -1,0 +1,94 @@
+<project name="WebLab3" default="build" basedir=".">
+
+    <!-- 1. Загрузка параметров -->
+    <property file="build.properties"/>
+    <path id="compile.classpath">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar"/>
+            </fileset>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="compile.classpath"/>
+        <pathelement location="${build.classes.dir}"/>
+        <fileset dir="${test.lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <pathelement location="${build.test.classes.dir}"/>
+    </path>
+
+    <!-- 2. Инициализация -->
+    <target name="init">
+        <echo message="=== [INIT] Инициализация директорий ==="/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.test.classes.dir}"/>
+        <mkdir dir="${build.jar.dir}"/>
+        <mkdir dir="${build.report.dir}"/>
+        <mkdir dir="${build.zip.dir}"/>
+    </target>
+
+    <!-- 3. COMPILE — реализует Даня -->
+    <target name="compile" depends="init"
+            description="Компилирует исходные коды проекта">
+        <echo message="=== [COMPILE] Цель реализована Даней ==="/>
+        <!-- TODO: Даня дописывает сюда <javac> -->
+    </target>
+
+    <!-- 4. BUILD — реализует Даня -->
+    <target name="build" depends="compile"
+            description="Компилирует проект и упаковывает в JAR">
+        <echo message="=== [BUILD] Цель реализована Даней ==="/>
+        <!-- TODO: Даня дописывает сюда <jar> с <manifest> и вызов music -->
+    </target>
+
+    <!-- 5. CLEAN — реализует Даня -->
+    <target name="clean"
+            description="Удаляет все скомпилированные файлы и временные артефакты">
+        <echo message="=== [CLEAN] Цель реализована Даней ==="/>
+        <!-- TODO: Даня дописывает сюда <delete> -->
+    </target>
+
+    <!-- 6. TEST — реализует Влад -->
+    <target name="test" depends="build" description="Запускает JUnit тесты">
+        <echo message="=== [TEST] Компиляция тестов ==="/>
+        <javac srcdir="${test.src.dir}"
+        destdir="${build.test.classes.dir}"
+        sourse="${javac.source}"
+        target="${javac.target}"
+        encoding="${javac.encoding}"
+        includeantruntime="false"
+        debug="true">
+            <classpath refid="test.classpath"/>
+        </javac>
+        <echo message="=== [TEST] Запуск тестов ==="/>
+        <java classname="org.junit.platform.console.standalone.ConsoleLauncher"
+        fork="true"
+        failonerror="true">
+            <classpath refid="test.classpath"/>
+            <arg value="--scan-class-path=${build.test.classes.dir}"/>
+            <arg value="--reports-dir=${build.report.dir}"/>
+            <arg value="--details=verbose"/>
+        </java>
+        <echo message="=== [TEST] Отчеты: ${build.report.dir} ==="/>
+    </target>
+    <!-- 7. MUSIC — реализует Влад -->
+    <target name="music"
+            description="Воспроизводит звук по завершении сборки">
+        <echo message="=== [MUSIC] Воспроизведение... ==="/>
+        <java classname="MusicPlayer" fork="true" failonerror="false">
+            <classpath>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+            <arg value="${music.file}"/>
+        </java>
+    </target>
+
+    <!-- 8. TEAM — реализует Даня -->
+    <target name="team"
+            description="Собирает 4 предыдущих git-ревизии и пакует в zip">
+        <echo message="=== [TEAM] Цель реализована Даней ==="/>
+        <!-- TODO: Даня дописывает сюда git checkout + ant build + zip -->
+    </target>
+
+
+</project>
