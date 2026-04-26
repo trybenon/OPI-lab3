@@ -62,12 +62,12 @@
     <antcall target="music"/>
 </target>
     <!-- 5. CLEAN ??? ?????????????????? ???????? -->
-<target name="clean" description="   ">
-    <delete dir="${build.dir}"/>
-    <delete>
-        <fileset dir="." includes="**/*.class"/>
-    </delete>
-</target>
+    <target name="clean" description="   ">
+        <delete dir="build"/>
+        <delete>
+            <fileset dir="." includes="**/*.class"/>
+        </delete>
+    </target>
     <!-- 6. TEST ??? ?????????????????? ???????? -->
     <target name="test" depends="build" description="?????????????????? JUnit ??????????">
         <echo message="=== [TEST] ???????????????????? ???????????? ==="/>
@@ -104,25 +104,16 @@
     </target>
 
     <!-- 8. TEAM ??? ?????????????????? ???????? -->
-<target name="team" description="  ">
-    <mkdir dir="${git.clone.dir}"/>
-    <exec executable="bash">
-        <arg value="-c"/>
-        <arg value="
-            REVISIONS=$(git log --pretty=format:'%H' -${git.revisions.count})
-            IDX=1
-            for REV in $REVISIONS; do
-                DEST='${git.clone.dir}/rev_'$IDX
-                git clone . $DEST
-                cd $DEST &amp;&amp; git checkout $REV
-                ant build -Dbuild.dir=$DEST/build -Dbuild.jar.dir=$DEST/build/jar
-                cd -
-                IDX=$((IDX+1))
-            done
-        "/>
-    </exec>
-    <zip destfile="${zip.file}">
-        <fileset dir="${git.clone.dir}" includes="**/build/jar/*.jar"/>
-    </zip>
-</target>
+    <target name="team" description="  ">
+        <mkdir dir="build/git-revisions"/>
+        <exec executable="bash">
+            <arg value="-c"/>
+            <arg value="REVISIONS=$(git log --pretty=format:'%H' -4); IDX=1; for REV in $REVISIONS; do DEST='build/git-revisions/rev_'$IDX; git clone . $DEST; cd $DEST 
+&amp;&amp; git checkout $REV; ant build -Dbuild.dir=$DEST/build -Dbuild.jar.dir=$DEST/build/jar; cd -; IDX=$((IDX+1)); done"/>
+        </exec>
+        <zip destfile="build/team-zip/server-team-revisions.zip">
+            <fileset dir="build/git-revisions" includes="**/build/jar/*.jar"/>
+        </zip>
+    </target>
+
 </project>
