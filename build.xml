@@ -2,6 +2,11 @@
 <project name="WebLab3" default="build" basedir=".">
 
     <property file="build.properties"/>
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+        <classpath>
+            <pathelement location="lib/ant-contrib-1.0b3.jar"/>
+        </classpath>
+    </taskdef>
 
     <path id="compile.classpath">
         <fileset dir="${lib.dir}">
@@ -36,7 +41,12 @@
                encoding="UTF-8"
                includeantruntime="false"
                debug="true">
-            <classpath refid="compile.classpath"/>
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${lib.dir}/lombok-1.18.42.jar"/>
+            </classpath>
+            <compilerarg value="-processorpath"/>
+            <compilerarg path="${lib.dir}/lombok-1.18.42.jar"/>
         </javac>
         <copy todir="${build.classes.dir}">
             <fileset dir="${src.dir}" excludes="**/*.java"/>
@@ -45,14 +55,23 @@
 
     <target name="build" depends="compile" description="Упаковка в JAR">
         <echo message="=== [BUILD] Создание JAR-архива ==="/>
-        <jar destfile="${build.jar.dir}/server-1.0.jar" basedir="${build.classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${app.main.class}"/>
-                <attribute name="Manifest-Version" value="1.0"/>
-            </manifest>
-            <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
-        </jar>
-        <antcall target="music"/>
+        <trycatch>
+            <try>
+                <jar destfile="${build.jar.dir}/server-1.0.jar"
+                     basedir="${build.classes.dir}">
+                    <manifest>
+                        <attribute name="Main-Class" value="${app.main.class}"/>
+                        <attribute name="Manifest-Version" value="1.0"/>
+                    </manifest>
+                    <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+                </jar>
+                <antcall target="success-music"/>
+            </try>
+            <catch>
+                <antcall target="fail-music"/>
+                <fail message="BUILD FAILED — см. ошибки выше"/>
+            </catch>
+        </trycatch>
     </target>
 
     <target name="clean" description="Удаление артефактов сборки">
@@ -72,26 +91,44 @@
             <classpath refid="test.classpath"/>
         </javac>
         <echo message="=== [TEST] Запуск тестов через ConsoleLauncher ==="/>
-        <java classname="org.junit.platform.console.standalone.ConsoleLauncher"
+        <java classname="org.junit.platform.console.ConsoleLauncher"
               fork="true"
               failonerror="true">
-            <classpath refid="test.classpath"/>
+            <classpath>
+                <path id="test.classpath">
+                    <pathelement location="${build.classes.dir}"/>
+                    <pathelement location="${build.test.classes.dir}"/>
+                    <pathelement location="lib/test/junit-platform-console-standalone-1.10.2.jar"/>
+                    <fileset dir="${lib.dir}" excludes="test/**">
+                        <include name="*.jar"/>
+                    </fileset>
+                </path>
+            </classpath>
             <arg value="--scan-class-path=${build.test.classes.dir}"/>
             <arg value="--reports-dir=${build.report.dir}"/>
             <arg value="--details=verbose"/>
         </java>
     </target>
 
-    <target name="music" description="Звуковой сигнал завершения">
+    <target name="success-music" description="Звуковой сигнал удачного завершения">
         <echo message="=== [MUSIC] Воспроизведение звука... ==="/>
         <java classname="MusicPlayer" fork="true" failonerror="false">
             <classpath>
                 <pathelement location="${build.classes.dir}"/>
             </classpath>
-            <arg value="${music.file}"/>
+            <arg value="${music.success}"/>
         </java>
     </target>
 
+    <target name="fail-music" description="Звуковой сигнал неудачного завершения">
+        <echo message="=== [MUSIC] Воспроизведение звука... ==="/>
+        <java classname="MusicPlayer" fork="true" failonerror="false">
+            <classpath>
+                <pathelement location="${build.classes.dir}"/>
+            </classpath>
+            <arg value="${music.fail}"/>
+        </java>
+    </target>
     <target name="team" description="Сборка JAR для 4 предыдущих ревизий Git">
         <echo message="=== [TEAM] Сборка версий из Git... ==="/>
         <mkdir dir="build/git-revisions"/>
