@@ -28,7 +28,7 @@
     </target>
 
     <!-- 3. COMPILE ??? ?????????????????? ???????? -->
-    <target name="compile" depends="init" description="   ">
+<target name="compile" depends="init" description="   ">
     <echo message="=== [COMPILE]    ==="/>
     <javac srcdir="${src.dir}"
            destdir="${build.classes.dir}"
@@ -43,25 +43,31 @@
         <fileset dir="${src.dir}" excludes="**/*.java"/>
     </copy>
     <echo message="=== [COMPILE]  ==="/>
-    </target>
+</target>
     <!-- 4. BUILD ??? ?????????????????? ???????? -->
-    <target name="build" depends="compile" description="     JAR">
+<target name="build" depends="compile" description="     JAR">
     <echo message="=== [BUILD]  JAR- ==="/>
     <manifest file="${build.dir}/MANIFEST.MF">
-        <attribute name="Main-Class" value="${app.main.class}"/>
-        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Manifest-Version"       value="1.0"/>
+        <attribute name="Main-Class"             value="${app.main.class}"/>
+        <attribute name="Implementation-Title"   value="${app.name}"/>
+        <attribute name="Implementation-Version" value="${app.version}"/>
+        <attribute name="Built-By"               value="${user.name}"/>
+        <attribute name="Created-By"             value="Apache Ant"/>
     </manifest>
     <jar destfile="${jar.file}" manifest="${build.dir}/MANIFEST.MF" basedir="${build.classes.dir}">
         <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
     </jar>
-    <antcall target="music"/> </target>
+    <echo message="=== [BUILD] JAR : ${jar.file} ==="/>
+    <antcall target="music"/>
+</target>
     <!-- 5. CLEAN ??? ?????????????????? ???????? -->
-    <target name="clean" description="   ">
+<target name="clean" description="   ">
     <delete dir="${build.dir}"/>
     <delete>
         <fileset dir="." includes="**/*.class"/>
     </delete>
-    </target>
+</target>
     <!-- 6. TEST ??? ?????????????????? ???????? -->
     <target name="test" depends="build" description="?????????????????? JUnit ??????????">
         <echo message="=== [TEST] ???????????????????? ???????????? ==="/>
@@ -98,7 +104,7 @@
     </target>
 
     <!-- 8. TEAM ??? ?????????????????? ???????? -->
-    <target name="team" description="  ">
+<target name="team" description="  ">
     <mkdir dir="${git.clone.dir}"/>
     <exec executable="bash">
         <arg value="-c"/>
@@ -118,6 +124,5 @@
     <zip destfile="${zip.file}">
         <fileset dir="${git.clone.dir}" includes="**/build/jar/*.jar"/>
     </zip>
-    </target>
-
+</target>
 </project>
