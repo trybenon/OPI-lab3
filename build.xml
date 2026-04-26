@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="WebLab3" default="build" basedir=".">
 
-    <!-- 1. ???????????????? ???????????????????? -->
     <property file="build.properties"/>
+
     <path id="compile.classpath">
-            <fileset dir="${lib.dir}">
-                <include name="**/*.jar"/>
-            </fileset>
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
     </path>
 
     <path id="test.classpath">
@@ -17,9 +18,8 @@
         <pathelement location="${build.test.classes.dir}"/>
     </path>
 
-    <!-- 2. ?????????????????????????? -->
     <target name="init">
-        <echo message="=== [INIT] ?????????????????????????? ???????????????????? ==="/>
+        <echo message="=== [INIT] Подготовка папок для сборки ==="/>
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${build.test.classes.dir}"/>
         <mkdir dir="${build.jar.dir}"/>
@@ -27,74 +27,63 @@
         <mkdir dir="${build.zip.dir}"/>
     </target>
 
-    <!-- 3. COMPILE ??? ?????????????????? ???????? -->
-<target name="compile" depends="init" description="   ">
-    <echo message="=== [COMPILE]    ==="/>
-    <javac srcdir="${src.dir}"
-           destdir="${build.classes.dir}"
-           source="${javac.source}"
-           target="${javac.target}"
-           encoding="${javac.encoding}"
-           includeantruntime="false"
-           debug="true">
-        <classpath refid="compile.classpath"/>
-    </javac>
-    <copy todir="${build.classes.dir}">
-        <fileset dir="${src.dir}" excludes="**/*.java"/>
-    </copy>
-    <echo message="=== [COMPILE]  ==="/>
-</target>
-    <!-- 4. BUILD ??? ?????????????????? ???????? -->
-<target name="build" depends="compile" description="     JAR">
-    <echo message="=== [BUILD]  JAR- ==="/>
-    <manifest file="${build.dir}/MANIFEST.MF">
-        <attribute name="Manifest-Version"       value="1.0"/>
-        <attribute name="Main-Class"             value="${app.main.class}"/>
-        <attribute name="Implementation-Title"   value="${app.name}"/>
-        <attribute name="Implementation-Version" value="${app.version}"/>
-        <attribute name="Built-By"               value="${user.name}"/>
-        <attribute name="Created-By"             value="Apache Ant"/>
-    </manifest>
-    <jar destfile="${jar.file}" manifest="${build.dir}/MANIFEST.MF" basedir="${build.classes.dir}">
-        <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
-    </jar>
-    <echo message="=== [BUILD] JAR : ${jar.file} ==="/>
-    <antcall target="music"/>
-</target>
-    <!-- 5. CLEAN ??? ?????????????????? ???????? -->
-    <target name="clean" description="   ">
-        <delete dir="build"/>
-        <delete>
-            <fileset dir="." includes="**/*.class"/>
-        </delete>
+    <target name="compile" depends="init" description="Компиляция исходного кода">
+        <echo message="=== [COMPILE] Компиляция основных классов... ==="/>
+        <javac srcdir="${src.dir}"
+               destdir="${build.classes.dir}"
+               source="${javac.source}"
+               target="${javac.target}"
+               encoding="UTF-8"
+               includeantruntime="false"
+               debug="true">
+            <classpath refid="compile.classpath"/>
+        </javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
     </target>
-    <!-- 6. TEST ??? ?????????????????? ???????? -->
-    <target name="test" depends="build" description="?????????????????? JUnit ??????????">
-        <echo message="=== [TEST] ???????????????????? ???????????? ==="/>
+
+    <target name="build" depends="compile" description="Упаковка в JAR">
+        <echo message="=== [BUILD] Создание JAR-архива ==="/>
+        <jar destfile="${build.jar.dir}/server-1.0.jar" basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${app.main.class}"/>
+                <attribute name="Manifest-Version" value="1.0"/>
+            </manifest>
+            <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+        </jar>
+        <antcall target="music"/>
+    </target>
+
+    <target name="clean" description="Удаление артефактов сборки">
+        <echo message="=== [CLEAN] Очистка директории build/ ==="/>
+        <delete dir="build"/>
+    </target>
+
+    <target name="test" depends="build" description="Запуск JUnit тестов">
+        <echo message="=== [TEST] Компиляция тестов ==="/>
         <javac srcdir="${test.src.dir}"
-        destdir="${build.test.classes.dir}"
-        sourse="${javac.source}"
-        target="${javac.target}"
-        encoding="${javac.encoding}"
-        includeantruntime="false"
-        debug="true">
+               destdir="${build.test.classes.dir}"
+               source="${javac.source}"
+               target="${javac.target}"
+               encoding="UTF-8"
+               includeantruntime="false"
+               debug="true">
             <classpath refid="test.classpath"/>
         </javac>
-        <echo message="=== [TEST] ???????????? ???????????? ==="/>
+        <echo message="=== [TEST] Запуск тестов через ConsoleLauncher ==="/>
         <java classname="org.junit.platform.console.standalone.ConsoleLauncher"
-        fork="true"
-        failonerror="true">
+              fork="true"
+              failonerror="true">
             <classpath refid="test.classpath"/>
             <arg value="--scan-class-path=${build.test.classes.dir}"/>
             <arg value="--reports-dir=${build.report.dir}"/>
             <arg value="--details=verbose"/>
         </java>
-        <echo message="=== [TEST] ????????????: ${build.report.dir} ==="/>
     </target>
-    <!-- 7. MUSIC ??? ?????????????????? ???????? -->
-    <target name="music"
-            description="?????????????????????????? ???????? ???? ???????????????????? ????????????">
-        <echo message="=== [MUSIC] ??????????????????????????????... ==="/>
+
+    <target name="music" description="Звуковой сигнал завершения">
+        <echo message="=== [MUSIC] Воспроизведение звука... ==="/>
         <java classname="MusicPlayer" fork="true" failonerror="false">
             <classpath>
                 <pathelement location="${build.classes.dir}"/>
@@ -103,13 +92,21 @@
         </java>
     </target>
 
-    <!-- 8. TEAM ??? ?????????????????? ???????? -->
-    <target name="team" description="  ">
+    <target name="team" description="Сборка JAR для 4 предыдущих ревизий Git">
+        <echo message="=== [TEAM] Сборка версий из Git... ==="/>
         <mkdir dir="build/git-revisions"/>
         <exec executable="bash">
             <arg value="-c"/>
-            <arg value="REVISIONS=$(git log --pretty=format:'%H' -4); IDX=1; for REV in $REVISIONS; do DEST='build/git-revisions/rev_'$IDX; git clone . $DEST; cd $DEST 
-&amp;&amp; git checkout $REV; ant build -Dbuild.dir=$DEST/build -Dbuild.jar.dir=$DEST/build/jar; cd -; IDX=$((IDX+1)); done"/>
+            <arg value="REVISIONS=$(git log --pretty=format:'%H' -4);
+                        IDX=1;
+                        for REV in $REVISIONS; do
+                            DEST='build/git-revisions/rev_'$IDX;
+                            git clone . $DEST;
+                            cd $DEST &amp;&amp; git checkout $REV;
+                            ant build -Dbuild.dir=$DEST/build -Dbuild.jar.dir=$DEST/build/jar;
+                            cd -;
+                            IDX=$((IDX+1));
+                        done"/>
         </exec>
         <zip destfile="build/team-zip/server-team-revisions.zip">
             <fileset dir="build/git-revisions" includes="**/build/jar/*.jar"/>
