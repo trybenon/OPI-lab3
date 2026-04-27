@@ -10,24 +10,24 @@
 
     <path id="compile.classpath">
         <fileset dir="${lib.dir}">
-            <include name="**/*.jar"/>
+            <include name="*.jar"/>
         </fileset>
     </path>
 
     <path id="test.classpath">
-        <path refid="compile.classpath"/>
         <pathelement location="${build.classes.dir}"/>
-        <fileset dir="${test.lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
         <pathelement location="${build.test.classes.dir}"/>
+        <pathelement location="lib/test/junit-platform-console-standalone-1.10.2.jar"/>
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+        </fileset>
     </path>
 
     <target name="init">
         <echo message="=== [INIT] Подготовка папок для сборки ==="/>
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${build.test.classes.dir}"/>
-        <mkdir dir="${build.jar.dir}"/>
+        <mkdir dir="${build.war.dir}"/>
         <mkdir dir="${build.report.dir}"/>
         <mkdir dir="${build.zip.dir}"/>
     </target>
@@ -48,23 +48,35 @@
             <compilerarg value="-processorpath"/>
             <compilerarg path="${lib.dir}/lombok-1.18.42.jar"/>
         </javac>
-        <copy todir="${build.classes.dir}">
-            <fileset dir="${src.dir}" excludes="**/*.java"/>
-        </copy>
     </target>
 
-    <target name="build" depends="compile" description="Упаковка в JAR">
-        <echo message="=== [BUILD] Создание JAR-архива ==="/>
+    <target name="build" depends="init" description="Упаковка в WAR">
         <trycatch>
             <try>
-                <jar destfile="${build.jar.dir}/server-1.0.jar"
-                     basedir="${build.classes.dir}">
-                    <manifest>
-                        <attribute name="Main-Class" value="${app.main.class}"/>
-                        <attribute name="Manifest-Version" value="1.0"/>
-                    </manifest>
-                    <zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
-                </jar>
+                <antcall target="compile"/>
+                <echo message="=== [BUILD] Создание WAR-архива ==="/>
+                <war destfile="${build.war.dir}/${app.name}-${app.version}.war"
+                     webxml="${webapp.dir}/WEB-INF/web.xml">
+                    <fileset dir="${webapp.dir}">
+                        <exclude name="WEB-INF/web.xml"/>
+                    </fileset>
+                    <classes dir="${build.classes.dir}"/>
+                    <classes dir="${webapp.dir}/WEB-INF/classes"/>
+                    <webinf dir="${webapp.dir}/WEB-INF">
+                        <exclude name="web.xml"/>
+                        <exclude name="classes/**"/>
+                    </webinf>
+
+                    <!-- Зависимости → WEB-INF/lib
+                         Jakarta API scope=provided — не включаем их в WAR -->
+                    <lib dir="${lib.dir}">
+                        <include name="gson-*.jar"/>
+                        <exclude name="jakarta.*.jar"/>
+                        <exclude name="ant-contrib-*.jar"/>
+                    </lib>
+
+                </war>
+                <echo message="=== [BUILD] WAR создан: ${build.war.dir}/${app.name}-${app.version}.war ==="/>
                 <antcall target="success-music"/>
             </try>
             <catch>
@@ -94,24 +106,15 @@
         <java classname="org.junit.platform.console.ConsoleLauncher"
               fork="true"
               failonerror="true">
-            <classpath>
-                <path id="test.classpath">
-                    <pathelement location="${build.classes.dir}"/>
-                    <pathelement location="${build.test.classes.dir}"/>
-                    <pathelement location="lib/test/junit-platform-console-standalone-1.10.2.jar"/>
-                    <fileset dir="${lib.dir}" excludes="test/**">
-                        <include name="*.jar"/>
-                    </fileset>
-                </path>
-            </classpath>
+            <classpath refid="test.classpath"/>
             <arg value="--scan-class-path=${build.test.classes.dir}"/>
             <arg value="--reports-dir=${build.report.dir}"/>
             <arg value="--details=verbose"/>
         </java>
     </target>
 
-    <target name="success-music" description="Звуковой сигнал удачного завершения">
-        <echo message="=== [MUSIC] Воспроизведение звука... ==="/>
+    <target name="success-music" unless="skip.music" description="Звук при успешной сборке">
+        <echo message="=== [MUSIC] Сборка успешна! ==="/>
         <java classname="MusicPlayer" fork="true" failonerror="false">
             <classpath>
                 <pathelement location="${build.classes.dir}"/>
@@ -120,8 +123,8 @@
         </java>
     </target>
 
-    <target name="fail-music" description="Звуковой сигнал неудачного завершения">
-        <echo message="=== [MUSIC] Воспроизведение звука... ==="/>
+    <target name="fail-music" unless="skip.music" description="Звук при ошибке сборки">
+        <echo message="=== [MUSIC] Сборка провалена! ==="/>
         <java classname="MusicPlayer" fork="true" failonerror="false">
             <classpath>
                 <pathelement location="${build.classes.dir}"/>
@@ -129,25 +132,28 @@
             <arg value="${music.fail}"/>
         </java>
     </target>
-    <target name="team" description="Сборка JAR для 4 предыдущих ревизий Git">
-        <echo message="=== [TEAM] Сборка версий из Git... ==="/>
-        <mkdir dir="build/git-revisions"/>
+    <target name="team" description="Сборка ревизий Git">
+        <echo message="=== [TEAM] Обработка последних 4 ревизий Git... ==="/>
+        <mkdir dir="${git.clone.dir}"/>
+        <mkdir dir="${build.zip.dir}"/>
+        <property name="skip.music" value="true"/>
         <exec executable="bash">
             <arg value="-c"/>
-            <arg value="REVISIONS=$(git log --pretty=format:'%H' -4);
-                        IDX=1;
-                        for REV in $REVISIONS; do
-                            DEST='build/git-revisions/rev_'$IDX;
-                            git clone . $DEST;
-                            cd $DEST &amp;&amp; git checkout $REV;
-                            ant build -Dbuild.dir=$DEST/build -Dbuild.jar.dir=$DEST/build/jar;
-                            cd -;
-                            IDX=$((IDX+1));
-                        done"/>
+            <arg value="REVISIONS=$(git log --pretty=format:'%H' -${git.revisions.count});
+                    IDX=1;
+                    for REV in $REVISIONS; do
+                        DEST='${git.clone.dir}/rev_'$IDX;
+                        git clone . $DEST;
+                        cd $DEST &amp;&amp; git checkout $REV;
+                        ant build -Dbuild.dir=build -Dbuild.war.dir=build/war -Dmusic.success=/dev/null -Dmusic.fail=/dev/null;
+                        cd -;
+                        IDX=$((IDX+1));
+                    done"/>
         </exec>
-        <zip destfile="build/team-zip/server-team-revisions.zip">
-            <fileset dir="build/git-revisions" includes="**/build/jar/*.jar"/>
+        <zip destfile="${zip.file}">
+            <fileset dir="${git.clone.dir}" includes="**/*.war"/>
         </zip>
+        <echo message="=== [TEAM] Готово! Архив в ${zip.file} ==="/>
     </target>
 
 </project>
