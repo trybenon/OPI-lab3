@@ -19,47 +19,47 @@ class PointTest {
         return p;
     }
 
-    // Q1: прямоугольник 0 ≤ x ≤ R, 0 ≤ y ≤ R/2
+    // Q1: прямоугольник 0 <= x <= R, 0 <= y <= R/2
     @Test
-    @DisplayName("Q1: центр прямоугольника — попадание")
+    @DisplayName("Q1: центр прямоугольника - попадание")
     void q1_center_hit() { assertTrue(makePoint(1.0, 0.5).hit()); }
 
     @Test
-    @DisplayName("Q1: угол прямоугольника (R, R/2) — попадание")
+    @DisplayName("Q1: угол прямоугольника (R, R/2) - попадание")
     void q1_corner_hit() { assertTrue(makePoint(R, R / 2).hit()); }
 
     @Test
-    @DisplayName("Q1: выше прямоугольника — промах")
+    @DisplayName("Q1: выше прямоугольника - промах")
     void q1_above_miss() { assertFalse(makePoint(1.0, 1.5).hit()); }
 
     @Test
-    @DisplayName("Q1: правее прямоугольника — промах")
+    @DisplayName("Q1: правее прямоугольника - промах")
     void q1_right_miss() { assertFalse(makePoint(2.5, 0.5).hit()); }
 
-    // Q2: четверть круга x²+y² ≤ R²
+    // Q2: четверть круга x**2+y**2 <= R**2
     @Test
-    @DisplayName("Q2: внутри четверти круга — попадание")
+    @DisplayName("Q2: внутри четверти круга - попадание")
     void q2_inside_hit() { assertTrue(makePoint(-1.0, 1.0).hit()); }
 
     @Test
-    @DisplayName("Q2: на границе окружности — попадание")
+    @DisplayName("Q2: на границе окружности - попадание")
     void q2_boundary_hit() { assertTrue(makePoint(0.0, R).hit()); }
 
     @Test
-    @DisplayName("Q2: снаружи окружности — промах")
+    @DisplayName("Q2: снаружи окружности - промах")
     void q2_outside_miss() { assertFalse(makePoint(-1.5, 1.5).hit()); }
 
-    // Q4: треугольник y ≥ x - R/2
+    // Q4: треугольник y >= x - R/2
     @Test
-    @DisplayName("Q4: внутри треугольника — попадание")
+    @DisplayName("Q4: внутри треугольника - попадание")
     void q4_inside_hit() { assertTrue(makePoint(0.5, -0.1).hit()); }
 
     @Test
-    @DisplayName("Q4: на гипотенузе — попадание")
+    @DisplayName("Q4: на гипотенузе - попадание")
     void q4_hypotenuse_hit() { assertTrue(makePoint(1.0, 0.0).hit()); }
 
     @Test
-    @DisplayName("Q4: ниже гипотенузы — промах")
+    @DisplayName("Q4: ниже гипотенузы 0 - промах")
     void q4_below_miss() { assertFalse(makePoint(2.0, -1.5).hit()); }
 
     // Q3: всегда промах
@@ -69,7 +69,7 @@ class PointTest {
 
     // Начало координат
     @Test
-    @DisplayName("Начало координат — попадание")
+    @DisplayName("Начало координат - попадание")
     void origin_hit() { assertTrue(makePoint(0, 0).hit()); }
 
     // Параметризованные

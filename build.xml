@@ -66,9 +66,6 @@
                         <exclude name="web.xml"/>
                         <exclude name="classes/**"/>
                     </webinf>
-
-                    <!-- Зависимости → WEB-INF/lib
-                         Jakarta API scope=provided — не включаем их в WAR -->
                     <lib dir="${lib.dir}">
                         <include name="gson-*.jar"/>
                         <exclude name="jakarta.*.jar"/>
