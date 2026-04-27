@@ -91,7 +91,9 @@
         <delete dir="build"/>
     </target>
 
-    <target name="test" depends="build" description="Запуск JUnit тестов">
+    <target name="test" depends="init" description="Запуск JUnit тестов">
+        <property name="skip.music" value="true"/>
+        <antcall target="build"/>
         <echo message="=== [TEST] Компиляция тестов ==="/>
         <javac srcdir="${test.src.dir}"
                destdir="${build.test.classes.dir}"
@@ -132,11 +134,11 @@
             <arg value="${music.fail}"/>
         </java>
     </target>
+
     <target name="team" description="Сборка ревизий Git">
         <echo message="=== [TEAM] Обработка последних 4 ревизий Git... ==="/>
         <mkdir dir="${git.clone.dir}"/>
         <mkdir dir="${build.zip.dir}"/>
-        <property name="skip.music" value="true"/>
         <exec executable="bash">
             <arg value="-c"/>
             <arg value="REVISIONS=$(git log --pretty=format:'%H' -${git.revisions.count});
